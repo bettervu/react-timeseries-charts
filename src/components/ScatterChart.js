@@ -200,7 +200,7 @@ export default class ScatterChart extends React.Component {
         const points = [];
         let hoverOverlay;
 
-        // if selectionChange is enabled, pointerEvents should be enabled as well
+        // if selectionChange is enabled, pointerEvents should be enabled as welld
         const pointerEvents = this.props.onSelectionChange ? "auto" : "none";
 
         this.props.columns.forEach(column => {
@@ -243,18 +243,24 @@ export default class ScatterChart extends React.Component {
                         );
                     }
 
-                    points.push(
-                        <circle
-                            key={`${column}-${key}`}
-                            cx={x}
-                            cy={y}
-                            r={radius}
-                            style={style}
-                            pointerEvents={pointerEvents}
-                            onMouseMove={this.handleHover}
-                            onClick={e => this.handleClick(e, event, column)}
-                        />
-                    );
+                    //allow for custom icons to be used
+                    if (this.props.icon) {
+                        const Icon = this.props.icon;
+                        points.push(<Icon transform={`translate(${x},${y})`} />);
+                    } else {
+                        points.push(
+                            <circle
+                                key={`${column}-${key}`}
+                                cx={x}
+                                cy={y}
+                                r={radius}
+                                style={style}
+                                pointerEvents={pointerEvents}
+                                onMouseMove={this.handleHover}
+                                onClick={e => this.handleClick(e, event, column)}
+                            />
+                        );
+                    }
 
                     key += 1;
                 }
