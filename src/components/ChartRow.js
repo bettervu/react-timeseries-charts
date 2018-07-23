@@ -165,6 +165,8 @@ export default class ChartRow extends React.Component {
     }
 
     render() {
+        const { paddingLeft, paddingRight } = this.props;
+
         const axes = []; // Contains all the yAxis elements used in the render
         const chartList = []; // Contains all the Chart elements used in the render
         // Dimensions
@@ -198,7 +200,7 @@ export default class ChartRow extends React.Component {
                 ) {
                     const yaxis = child;
 
-                    if (yaxis.props.id) {
+                    if (yaxis.props.id && yaxis.props.visible !== false) {
                         // Relate id to the axis
                         yAxisMap[yaxis.props.id] = yaxis;
                     }
@@ -241,24 +243,45 @@ export default class ChartRow extends React.Component {
             posx -= colWidth;
             if (colWidth > 0 && leftColumnIndex < leftAxisList.length) {
                 id = leftAxisList[leftColumnIndex];
-                transform = `translate(${posx},0)`;
+                // transform = `translate(${posx},0)`;
+                //
+                // // Additional props for left aligned axes
+                // props = {
+                //     width: colWidth,
+                //     height: innerHeight,
+                //     align: "left",
+                //     scale: this.scaleMap[id].latestScale()
+                // };
+                //
+                // // Cloned left axis
+                // axis = React.cloneElement(yAxisMap[id], props);
+                //
+                // axes.push(
+                //     <g key={`y-axis-left-${leftColumnIndex}`} transform={transform}>
+                //         {axis}
+                //     </g>
+                // );
 
-                // Additional props for left aligned axes
-                props = {
-                    width: colWidth,
-                    height: innerHeight,
-                    align: "left",
-                    scale: this.scaleMap[id].latestScale()
-                };
+                if (_.has(yAxisMap, id)) {
+                    transform = `translate(${posx + paddingLeft},0)`;
 
-                // Cloned left axis
-                axis = React.cloneElement(yAxisMap[id], props);
+                    // Additional props for left aligned axes
+                    props = {
+                        width: colWidth,
+                        height: innerHeight,
+                        align: "left",
+                        scale: this.scaleMap[id].latestScale()
+                    };
 
-                axes.push(
-                    <g key={`y-axis-left-${leftColumnIndex}`} transform={transform}>
-                        {axis}
-                    </g>
-                );
+                    // Cloned left axis
+                    axis = React.cloneElement(yAxisMap[id], props);
+
+                    axes.push(
+                        <g key={`y-axis-left-${leftColumnIndex}`} transform={transform}>
+                            {axis}
+                        </g>
+                    );
+                }
             }
         }
 
@@ -271,24 +294,26 @@ export default class ChartRow extends React.Component {
             const colWidth = this.props.rightAxisWidths[rightColumnIndex];
             if (colWidth > 0 && rightColumnIndex < rightAxisList.length) {
                 id = rightAxisList[rightColumnIndex];
-                transform = `translate(${posx},0)`;
+                if (_.has(yAxisMap, id)) {
+                    transform = `translate(${posx + paddingLeft},0)`;
 
-                // Additional props for right aligned axes
-                props = {
-                    width: colWidth,
-                    height: innerHeight,
-                    align: "right",
-                    scale: this.scaleMap[id].latestScale()
-                };
+                    // Additional props for right aligned axes
+                    props = {
+                        width: colWidth,
+                        height: innerHeight,
+                        align: "right",
+                        scale: this.scaleMap[id].latestScale()
+                    };
 
-                // Cloned right axis
-                axis = React.cloneElement(yAxisMap[id], props);
+                    // Cloned right axis
+                    axis = React.cloneElement(yAxisMap[id], props);
 
-                axes.push(
-                    <g key={`y-axis-right-${rightColumnIndex}`} transform={transform}>
-                        {axis}
-                    </g>
-                );
+                    axes.push(
+                        <g key={`y-axis-right-${rightColumnIndex}`} transform={transform}>
+                            {axis}
+                        </g>
+                    );
+                }
             }
 
             posx += colWidth;
