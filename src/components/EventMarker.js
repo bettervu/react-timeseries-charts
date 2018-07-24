@@ -210,6 +210,7 @@ export default class EventMarker extends React.Component {
         //
 
         if (this.props.type === "point") {
+            console.log("is point");
             let textDefaultStyle = {
                 fontSize: 11,
                 pointerEvents: "none",

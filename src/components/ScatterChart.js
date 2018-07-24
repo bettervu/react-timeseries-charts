@@ -246,13 +246,22 @@ export default class ScatterChart extends React.Component {
                     //allow for custom icons to be used
                     if (this.props.icon) {
                         const Icon = this.props.icon;
-                        points.push(<Icon transform={`translate(${x},${y})`} />);
+                        points.push(
+                            <Icon
+                                pointerEvents={pointerEvents}
+                                onMouseMove={this.handleHover}
+                                onClick={e => this.handleClick(e, event, column)}
+                                style={style}
+                                key={`${column}-${key}`}
+                                transform={`translate(${x},${y})`}
+                            />
+                        );
                     } else {
                         points.push(
                             <circle
                                 key={`${column}-${key}`}
                                 cx={x}
-                                cy={y}
+                                cy={y - 30}
                                 r={radius}
                                 style={style}
                                 pointerEvents={pointerEvents}
