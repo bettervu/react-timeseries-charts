@@ -261,7 +261,7 @@ export default class ScatterChart extends React.Component {
                             <circle
                                 key={`${column}-${key}`}
                                 cx={x}
-                                cy={y - 30}
+                                cy={y - this.props.scatterPointsOffsetY}
                                 r={radius}
                                 style={style}
                                 pointerEvents={pointerEvents}
