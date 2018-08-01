@@ -30,7 +30,7 @@ const defaultTimeAxisStyle = {
         labelSize: 11
     },
     axis: {
-        axisColor: "#C0C0C0",
+        axisColor: "#dbdbdb",
         axisWidth: 1
     }
 };
@@ -576,6 +576,6 @@ ChartContainer.defaultProps = {
     enablePanZoom: false,
     utc: false,
     showGrid: false,
-    showGridPosition: "over",
+    showGridPosition: "under",
     timeAxisStyle: defaultTimeAxisStyle
 };
