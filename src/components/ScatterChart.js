@@ -243,9 +243,11 @@ export default class ScatterChart extends React.Component {
                         );
                     }
 
-                    //allow for custom icons to be used
-                    if (this.props.icon) {
+                    //allow for custom icons to be used, but only when the value is -1
+                    if (this.props.icon && value === -1) {
                         const Icon = this.props.icon;
+                        const iconOffsetX = this.props.iconOffsetX;
+                        const iconOffsetY = this.props.iconOffsetY;
                         points.push(
                             <Icon
                                 pointerEvents={pointerEvents}
@@ -253,7 +255,8 @@ export default class ScatterChart extends React.Component {
                                 onClick={e => this.handleClick(e, event, column)}
                                 style={style}
                                 key={`${column}-${key}`}
-                                transform={`translate(${x},${y})`}
+                                // transform={'translate(-50%,-50%)'}
+                                transform={`translate(${x - iconOffsetX}, ${iconOffsetY})`}
                             />
                         );
                     } else {

@@ -178,7 +178,14 @@ export default class EventMarker extends React.Component {
         // tracker because bars maybe be offset from their actual event position in
         // order to display them side by side.
         const posx = this.props.timeScale(t) + this.props.offsetX;
-        const posy = this.props.yScale(value) - this.props.offsetY;
+        let posy = null;
+        //tooltips are offset weird when compared to regular circle points.
+        //allow a y offset on the tooltips specifically for the icons to acount for this
+        if (value === -1) {
+            posy = this.props.yScale(value) - this.props.iconTooltipOffsetY;
+        } else {
+            posy = this.props.yScale(value) - this.props.offsetY;
+        }
 
         const infoBoxProps = {
             align: "left",
