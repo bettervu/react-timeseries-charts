@@ -18,7 +18,7 @@ import { timeFormat } from "d3-time-format";
 import Label from "./Label";
 import ValueList from "./ValueList";
 
-const EventTime = ({ time, format = "%m/%d/%y %X" }) => {
+const EventTime = ({ time, format = "%m/%d/%y %X", timezone }) => {
     const textStyle = {
         fontSize: 11,
         textAnchor: "left",
@@ -32,6 +32,10 @@ const EventTime = ({ time, format = "%m/%d/%y %X" }) => {
     } else {
         const fmt = timeFormat(format);
         text = fmt(time);
+    }
+
+    if (timezone) {
+        text = text + " " + timezone;
     }
 
     return (
@@ -146,7 +150,13 @@ EventIndex.propTypes = {
 export default class EventMarker extends React.Component {
     renderTime(event) {
         if (event instanceof TimeEvent) {
-            return <EventTime time={event.timestamp()} format={this.props.infoTimeFormat} />;
+            return (
+                <EventTime
+                    time={event.timestamp()}
+                    format={this.props.infoTimeFormat}
+                    timezone={this.props.timezone}
+                />
+            );
         } else if (event instanceof IndexedEvent) {
             return <EventIndex index={event.index()} format={this.props.infoTimeFormat} />;
         } else if (event instanceof TimeRangeEvent) {
@@ -180,7 +190,7 @@ export default class EventMarker extends React.Component {
         const posx = this.props.timeScale(t) + this.props.offsetX;
         let posy = null;
         //tooltips are offset weird when compared to regular circle points.
-        //allow a y offset on the tooltips specifically for the icons to acount for this
+        //ayllow a y offset on the tooltips specifically for the icons to acount for this
         if (value === -1) {
             posy = this.props.yScale(value) - this.props.iconTooltipOffsetY;
         } else {
