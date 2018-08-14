@@ -204,6 +204,13 @@ export default class EventMarker extends React.Component {
             height: this.props.infoHeight
         };
 
+        const damagingHailInfoBoxProps = {
+            align: "left",
+            style: this.props.infoStyle,
+            width: this.props.damagingHailInfoWidth,
+            height: this.props.damagingHailInfoHeight
+        };
+
         const w = this.props.infoWidth;
         const lineBottom = posy - 10;
 
@@ -218,7 +225,16 @@ export default class EventMarker extends React.Component {
             if (_.isString(this.props.info)) {
                 infoBox = <Label {...infoBoxProps} label={info} />;
             } else {
-                infoBox = <ValueList {...infoBoxProps} values={info} />;
+                if (this.props.damagingHailInfo && event.get(column) === -1) {
+                    infoBox = (
+                        <ValueList
+                            {...damagingHailInfoBoxProps}
+                            values={this.props.damagingHailInfo}
+                        />
+                    );
+                } else {
+                    infoBox = <ValueList {...infoBoxProps} values={info} />;
+                }
             }
         }
 

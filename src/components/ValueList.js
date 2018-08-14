@@ -45,7 +45,11 @@ const ValueList = props => {
             return (
                 <g key={i}>
                     <text x={10} y={5} dy={`${(i + 1) * 1.2}em`} style={textStyle}>
-                        <tspan style={{ fontWeight: 700 }}>{`${item.label}: `}</tspan>
+                        {item.value !== "" ? (
+                            <tspan style={{ fontWeight: 700 }}>{`${item.label}: `}</tspan>
+                        ) : (
+                            <tspan style={{ fontWeight: 700 }}>{`${item.label}`}</tspan>
+                        )}
                         <tspan>{`${item.value}`}</tspan>
                     </text>
                 </g>
@@ -56,7 +60,11 @@ const ValueList = props => {
         return (
             <g key={i}>
                 <text x={posx} y={5} dy={`${(i + 1) * 1.2}em`} style={textStyleCentered}>
-                    <tspan style={{ fontWeight: 700 }}>{`${item.label}: `}</tspan>
+                    {item.value !== "" ? (
+                        <tspan style={{ fontWeight: 700 }}>{`${item.label}: `}</tspan>
+                    ) : (
+                        <tspan style={{ fontWeight: 700 }}>{`${item.label}`}</tspan>
+                    )}
                     <tspan>{`${item.value}`}</tspan>
                 </text>
             </g>
