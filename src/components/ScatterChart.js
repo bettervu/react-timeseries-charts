@@ -22,8 +22,21 @@ import { Styler } from "../js/styler";
 const defaultStyle = {
     normal: { fill: "steelblue", opacity: 0.8 },
     highlighted: { fill: "steelblue", opacity: 1.0 },
-    selected: { fill: "steelblue", opacity: 1.0 },
+    selected: {
+        fill: "steelblue",
+        stroke: "#2CB1CF",
+        strokeWidth: 2,
+        strokeOpacity: 1,
+        fillOpacity: 0.7
+    },
     muted: { fill: "steelblue", opacity: 0.4 }
+};
+
+const iconStyle = {
+    normal: { fill: "none", opacity: 0.8 },
+    highlighted: { fill: "none", opacity: 1.0 },
+    selected: { fill: "none", stroke: "#0090DA", strokeWidth: 2, strokeOpacity: 1, fillOpacity: 1 },
+    muted: { fill: "none", opacity: 0.4 }
 };
 
 /**
@@ -191,6 +204,35 @@ export default class ScatterChart extends React.Component {
         return style;
     }
 
+    blandStyle(column, event) {
+        let style;
+
+        const isHighlighted =
+            this.props.highlight &&
+            column === this.props.highlight.column &&
+            Event.is(this.props.highlight.event, event);
+        const isSelected =
+            this.props.selected &&
+            column === this.props.selected.column &&
+            Event.is(this.props.selected.event, event);
+
+        if (this.props.selected) {
+            if (isSelected) {
+                style = iconStyle.selected;
+            } else if (isHighlighted) {
+                style = iconStyle.highlighted;
+            } else {
+                style = iconStyle.normal;
+            }
+        } else if (isHighlighted) {
+            style = iconStyle.highlighted;
+        } else {
+            style = iconStyle.normal;
+        }
+
+        return style;
+    }
+
     //
     // Render
     //
@@ -212,6 +254,7 @@ export default class ScatterChart extends React.Component {
                 const value = event.get(column);
                 const badPoint = _.isNull(value) || _.isNaN(value);
                 const style = this.style(column, event);
+                const blandStyle = this.blandStyle(column, event);
 
                 if (!badPoint) {
                     const x = timeScale(t);
@@ -248,14 +291,14 @@ export default class ScatterChart extends React.Component {
                         const Icon = this.props.icon;
                         const iconOffsetX = this.props.iconOffsetX;
                         const iconOffsetY = this.props.iconOffsetY;
+
                         points.push(
                             <Icon
                                 pointerEvents={pointerEvents}
                                 onMouseMove={this.handleHover}
                                 onClick={e => this.handleClick(e, event, column)}
-                                style={style}
+                                style={blandStyle}
                                 key={`${column}-${key}`}
-                                // transform={'translate(-50%,-50%)'}
                                 transform={`translate(${x - iconOffsetX}, ${iconOffsetY})`}
                             />
                         );
