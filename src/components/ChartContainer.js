@@ -344,6 +344,7 @@ export default class ChartContainer extends React.Component {
 
         return this.props.showGridPosition === "over" ? (
             <svg
+                id="myViewer"
                 width={svgWidth}
                 height={svgHeight}
                 style={{ display: "block" }}
@@ -357,6 +358,7 @@ export default class ChartContainer extends React.Component {
             </svg>
         ) : (
             <svg
+                id="myViewer"
                 width={svgWidth}
                 height={svgHeight}
                 style={{ display: "block" }}
