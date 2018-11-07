@@ -18,7 +18,7 @@ import { timeFormat } from "d3-time-format";
 import Label from "./Label";
 import ValueList from "./ValueList";
 
-const EventTime = ({ time, format = "%m/%d/%y %X" }) => {
+const EventTime = ({ time, format = "%m/%d/%y %X", timezone }) => {
     const textStyle = {
         fontSize: 11,
         textAnchor: "left",
@@ -32,6 +32,10 @@ const EventTime = ({ time, format = "%m/%d/%y %X" }) => {
     } else {
         const fmt = timeFormat(format);
         text = fmt(time);
+    }
+
+    if (timezone) {
+        text = text + " " + timezone;
     }
 
     return (
@@ -146,7 +150,13 @@ EventIndex.propTypes = {
 export default class EventMarker extends React.Component {
     renderTime(event) {
         if (event instanceof TimeEvent) {
-            return <EventTime time={event.timestamp()} format={this.props.infoTimeFormat} />;
+            return (
+                <EventTime
+                    time={event.timestamp()}
+                    format={this.props.infoTimeFormat}
+                    timezone={this.props.timezone}
+                />
+            );
         } else if (event instanceof IndexedEvent) {
             return <EventIndex index={event.index()} format={this.props.infoTimeFormat} />;
         } else if (event instanceof TimeRangeEvent) {
@@ -178,13 +188,27 @@ export default class EventMarker extends React.Component {
         // tracker because bars maybe be offset from their actual event position in
         // order to display them side by side.
         const posx = this.props.timeScale(t) + this.props.offsetX;
-        const posy = this.props.yScale(value) - this.props.offsetY;
+        let posy = null;
+        //tooltips are offset weird when compared to regular circle points.
+        //ayllow a y offset on the tooltips specifically for the icons to acount for this
+        if (value === -1) {
+            posy = this.props.yScale(value) - this.props.iconTooltipOffsetY;
+        } else {
+            posy = this.props.yScale(value) - this.props.offsetY;
+        }
 
         const infoBoxProps = {
             align: "left",
             style: this.props.infoStyle,
             width: this.props.infoWidth,
             height: this.props.infoHeight
+        };
+
+        const damagingHailInfoBoxProps = {
+            align: "left",
+            style: this.props.infoStyle,
+            width: this.props.damagingHailInfoWidth,
+            height: this.props.damagingHailInfoHeight
         };
 
         const w = this.props.infoWidth;
@@ -201,7 +225,16 @@ export default class EventMarker extends React.Component {
             if (_.isString(this.props.info)) {
                 infoBox = <Label {...infoBoxProps} label={info} />;
             } else {
-                infoBox = <ValueList {...infoBoxProps} values={info} />;
+                if (this.props.damagingHailInfo && event.get(column) === -1) {
+                    infoBox = (
+                        <ValueList
+                            {...damagingHailInfoBoxProps}
+                            values={this.props.damagingHailInfo}
+                        />
+                    );
+                } else {
+                    infoBox = <ValueList {...infoBoxProps} values={info} />;
+                }
             }
         }
 
@@ -210,6 +243,7 @@ export default class EventMarker extends React.Component {
         //
 
         if (this.props.type === "point") {
+            console.log("is point");
             let textDefaultStyle = {
                 fontSize: 11,
                 pointerEvents: "none",

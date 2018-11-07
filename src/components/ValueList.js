@@ -41,11 +41,29 @@ const ValueList = props => {
     };
 
     const values = props.values.map((item, i) => {
-        if (align === "left") {
+        if (align === "left" && item.value === "*Detected by Local Ground Station") {
             return (
                 <g key={i}>
                     <text x={10} y={5} dy={`${(i + 1) * 1.2}em`} style={textStyle}>
-                        <tspan style={{ fontWeight: 700 }}>{`${item.label}: `}</tspan>
+                        <tspan style={{ fontWeight: 700 }}>{`${item.label}`}</tspan>
+
+                        {item.label === "" ? (
+                            <tspan style={{ fontSize: 7 }}>{`${item.value}`}</tspan>
+                        ) : (
+                            <tspan>{`${item.value}`}</tspan>
+                        )}
+                    </text>
+                </g>
+            );
+        } else if (align === "left") {
+            return (
+                <g key={i}>
+                    <text x={10} y={5} dy={`${(i + 1) * 1.2}em`} style={textStyle}>
+                        {item.value !== "" ? (
+                            <tspan style={{ fontWeight: 700 }}>{`${item.label}: `}</tspan>
+                        ) : (
+                            <tspan style={{ fontWeight: 700 }}>{`${item.label}`}</tspan>
+                        )}
                         <tspan>{`${item.value}`}</tspan>
                     </text>
                 </g>
@@ -56,7 +74,11 @@ const ValueList = props => {
         return (
             <g key={i}>
                 <text x={posx} y={5} dy={`${(i + 1) * 1.2}em`} style={textStyleCentered}>
-                    <tspan style={{ fontWeight: 700 }}>{`${item.label}: `}</tspan>
+                    {item.value !== "" ? (
+                        <tspan style={{ fontWeight: 700 }}>{`${item.label}: `}</tspan>
+                    ) : (
+                        <tspan style={{ fontWeight: 700 }}>{`${item.label}`}</tspan>
+                    )}
                     <tspan>{`${item.value}`}</tspan>
                 </text>
             </g>

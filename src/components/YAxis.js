@@ -19,34 +19,19 @@ import { axisLeft, axisRight } from "d3-axis";
 import { easeSinOut } from "d3-ease";
 import { format } from "d3-format";
 import { select } from "d3-selection";
-import "d3-selection-multi";
 
 import { scaleAsString } from "../js/util";
 
 const MARGIN = 0;
 
 const defaultStyle = {
-    label: {
-        stroke: "none",
-        fill: "#8B7E7E", // Default label color
-        fontWeight: 100,
-        fontSize: 12,
-        font: '"Goudy Bookletter 1911", sans-serif"'
-    },
-    values: {
-        stroke: "none",
-        fill: "#8B7E7E", // Default value color
-        fontWeight: 100,
-        fontSize: 11,
-        font: '"Goudy Bookletter 1911", sans-serif"'
-    },
-    ticks: {
-        fill: "none",
-        stroke: "#C0C0C0"
+    labels: {
+        labelColor: "#8B7E7E", // Default label color
+        labelWeight: 100,
+        labelSize: 11
     },
     axis: {
-        fill: "none",
-        stroke: "#C0C0C0"
+        axisColor: "#C0C0C0"
     }
 };
 
@@ -106,70 +91,29 @@ export default class YAxis extends React.Component {
             this.props.align,
             this.props.scale,
             +this.props.width,
-            +this.props.height,
-            this.props.showGrid,
-            +this.props.chartExtent,
-            this.props.hideAxisLine,
             this.props.absolute,
-            this.props.type,
             this.props.format
         );
     }
 
     componentWillReceiveProps(nextProps) {
-        const {
-            scale,
-            align,
-            width,
-            height,
-            chartExtent,
-            absolute,
-            format,
-            type,
-            showGrid,
-            hideAxisLine
-        } = nextProps;
+        const scale = nextProps.scale;
+        const align = nextProps.align;
+        const width = nextProps.width;
+        const absolute = nextProps.absolute;
+        const fmt = nextProps.format;
+        const type = nextProps.type;
 
-        if (scaleAsString(this.props.scale) !== scaleAsString(scale)) {
-            this.updateAxis(
-                align,
-                scale,
-                width,
-                height,
-                showGrid,
-                chartExtent,
-                hideAxisLine,
-                absolute,
-                type,
-                format
-            );
-        } else if (
-            this.props.format !== format ||
-            this.props.align !== align ||
-            this.props.width !== width ||
-            this.props.height !== height ||
-            this.props.type !== type ||
-            this.props.absolute !== absolute ||
-            this.props.chartExtent !== chartExtent ||
-            this.props.showGrid !== showGrid ||
-            this.props.hideAxisLine !== hideAxisLine
+        if (
+            scaleAsString(this.props.scale) !== scaleAsString(scale) ||
+            this.props.type !== nextProps.type
         ) {
-            this.renderAxis(
-                align,
-                scale,
-                +width,
-                +height,
-                showGrid,
-                chartExtent,
-                hideAxisLine,
-                absolute,
-                type,
-                format
-            );
+            this.updateAxis(align, scale, width, absolute, type, fmt);
         }
     }
 
     shouldComponentUpdate() {
+        // eslint-disable-line
         return false;
     }
 
@@ -183,65 +127,73 @@ export default class YAxis extends React.Component {
         }
     }
 
-    mergeStyles(style) {
-        return {
-            labelStyle: merge(
-                true,
-                defaultStyle.label,
-                this.props.style.label ? this.props.style.label : {}
-            ),
-            valueStyle: merge(
-                true,
-                defaultStyle.values,
-                this.props.style.values ? this.props.style.values : {}
-            ),
-            axisStyle: merge(
-                true,
-                defaultStyle.axis,
-                this.props.style.axis ? this.props.style.axis : {}
-            ),
-            tickStyle: merge(
-                true,
-                defaultStyle.ticks,
-                this.props.style.ticks ? this.props.style.ticks : {}
-            )
-        };
-    }
+    updateAxis(align, scale, width, absolute, type, fmt) {
+        const yformat = this.yformat(fmt);
+        const axis = align === "left" ? axisLeft : axisRight;
 
-    postSelect(style, hideAxisLine, height) {
-        const { valueStyle, tickStyle, axisStyle } = style;
+        const axisStyle = merge(
+            true,
+            defaultStyle.axis,
+            this.props.style.axis ? this.props.style.axis : {}
+        );
+        const { axisColor } = axisStyle;
+
+        //
+        // Make an axis generator
+        //
+
+        let axisGenerator;
+        if (type === "linear" || type === "power") {
+            if (this.props.height <= 200) {
+                axisGenerator = axis(scale)
+                    .ticks(5)
+                    .tickFormat(d => {
+                        if (absolute) {
+                            return yformat(Math.abs(d));
+                        }
+                        return yformat(d);
+                    });
+            } else {
+                axisGenerator = axis(scale).tickFormat(d => {
+                    if (absolute) {
+                        return yformat(Math.abs(d));
+                    }
+                    return yformat(d);
+                });
+            }
+        } else if (type === "log") {
+            if (this.props.min === 0) {
+                throw Error("In a log scale, minimum value can't be 0");
+            }
+            axisGenerator = axis(scale).ticks(10, ".2s");
+        }
+
         select(ReactDOM.findDOMNode(this))
+            .select(".yaxis")
+            .transition()
+            .duration(this.props.transition)
+            .ease(easeSinOut)
+            .call(axisGenerator);
+
+        select(ReactDOM.findDOMNode(this)) // eslint-disable-line
             .select("g")
             .selectAll(".tick")
             .select("text")
-            .styles(valueStyle);
+            .style("fill", axisColor)
+            .style("stroke", "none");
 
-        select(ReactDOM.findDOMNode(this))
+        select(ReactDOM.findDOMNode(this)) // eslint-disable-line
             .select("g")
             .selectAll(".tick")
             .select("line")
-            .styles(tickStyle);
-
-        select(ReactDOM.findDOMNode(this))
-            .select("g")
-            .selectAll(".domain")
-            .remove();
-
-        if (!hideAxisLine) {
-            select(ReactDOM.findDOMNode(this))
-                .select("g")
-                .append("line")
-                .styles(axisStyle)
-                .attr("x1", 0)
-                .attr("y1", 0)
-                .attr("x2", 0)
-                .attr("y2", height);
-        }
+            .style("stroke", axisColor);
     }
 
-    generator(type, absolute, yformat, axis, scale) {
+    renderAxis(align, scale, width, absolute, fmt) {
+        const yformat = this.yformat(fmt);
         let axisGenerator;
-        if (type === "linear" || type === "power") {
+        const axis = align === "left" ? axisLeft : axisRight;
+        if (this.props.type === "linear" || this.props.type === "power") {
             if (this.props.tickCount > 0) {
                 const stepSize = (this.props.max - this.props.min) / (this.props.tickCount - 1);
                 axisGenerator = axis(scale)
@@ -277,95 +229,90 @@ export default class YAxis extends React.Component {
                         .tickSizeOuter(0);
                 }
             }
-        } else if (type === "log") {
+        } else if (this.props.type === "log") {
             if (this.props.min === 0) {
                 throw Error("In a log scale, minimum value can't be 0");
             }
-            axisGenerator = axis(scale)
+            axisGenerator = axis()
+                .scale(scale)
                 .ticks(10, ".2s")
                 .tickSizeOuter(0);
         }
-        return axisGenerator;
-    }
-
-    renderAxis(
-        align,
-        scale,
-        width,
-        height,
-        showGrid,
-        chartExtent,
-        hideAxisLine,
-        absolute,
-        type,
-        fmt
-    ) {
-        const yformat = this.yformat(fmt);
-        const axis = align === "left" ? axisLeft : axisRight;
-        const style = this.mergeStyles(this.props.style);
-        const { labelStyle, valueStyle } = style;
-        const tickSize = showGrid && this.props.isInnerAxis ? -chartExtent : 5;
-        const x = align === "left" ? width - MARGIN : 0;
-        const labelOffset =
-            align === "left" ? this.props.labelOffset - 50 : 40 + this.props.labelOffset;
-
-        // Axis generator
-        const axisGenerator = this.generator(type, absolute, yformat, axis, scale);
 
         // Remove the old axis from under this DOM node
         select(ReactDOM.findDOMNode(this))
             .selectAll("*")
-            .remove();
-
+            .remove(); // eslint-disable-line
         // Add the new axis
-        this.axis = select(ReactDOM.findDOMNode(this))
+        const x = align === "left" ? width - MARGIN : 0;
+        const labelOffset =
+            align === "left" ? this.props.labelOffset - 50 : 40 + this.props.labelOffset;
+
+        //
+        // Style
+        //
+
+        const labelStyle = merge(
+            true,
+            defaultStyle.labels,
+            this.props.style.labels ? this.props.style.labels : {}
+        );
+        const axisStyle = merge(
+            true,
+            defaultStyle.axis,
+            this.props.style.axis ? this.props.style.axis : {}
+        );
+        const { axisColor } = axisStyle;
+        const { labelColor, labelWeight, labelSize } = labelStyle;
+
+        this.axis = select(ReactDOM.findDOMNode(this)) // eslint-disable-line
             .append("g")
             .attr("transform", `translate(${x},0)`)
+            .style("stroke", "none")
             .attr("class", "yaxis")
-            .styles(valueStyle)
-            .call(axisGenerator.tickSize(tickSize))
+            .style("fill", labelColor)
+            .style("font-weight", labelWeight)
+            .style("font-size", labelSize)
+            .call(axisGenerator)
             .append("text")
             .text(this.props.label)
-            .styles(labelStyle)
             .attr("transform", "rotate(-90)")
             .attr("y", labelOffset)
             .attr("dy", ".71em")
-            .attr("text-anchor", "end");
+            .attr("text-anchor", "end")
+            .style("fill", this.props.style.labelColor)
+            .style(
+                "font-family",
+                this.props.style.labelFont || '"Goudy Bookletter 1911", sans-serif"'
+            )
+            .style("font-weight", this.props.style.labelWeight || 100)
+            .style(
+                "font-size",
+                this.props.style.labelSize ? `${this.props.style.width}px` : "12px"
+            );
 
-        this.postSelect(style, hideAxisLine, height);
-    }
+        select(ReactDOM.findDOMNode(this)) // eslint-disable-line
+            .select("g")
+            .selectAll(".tick")
+            .select("text")
+            .style("fill", axisColor)
+            .style("stroke", "none");
 
-    updateAxis(
-        align,
-        scale,
-        width,
-        height,
-        showGrid,
-        chartExtent,
-        hideAxisLine,
-        absolute,
-        type,
-        fmt
-    ) {
-        const yformat = this.yformat(fmt);
-        const axis = align === "left" ? axisLeft : axisRight;
-        const style = this.mergeStyles(this.props.style);
-        const tickSize = showGrid && this.props.isInnerAxis ? -chartExtent : 5;
+        select(ReactDOM.findDOMNode(this)) // eslint-disable-line
+            .select("g")
+            .selectAll(".tick")
+            .select("line")
+            .style("stroke", axisColor);
 
-        const axisGenerator = this.generator(type, absolute, yformat, axis, scale, tickSize);
-
-        // Transition the existing axis
-        select(ReactDOM.findDOMNode(this))
-            .select(".yaxis")
-            .transition()
-            .duration(this.props.transition)
-            .ease(easeSinOut)
-            .call(axisGenerator.tickSize(tickSize));
-
-        this.postSelect(style, hideAxisLine, height);
+        select(ReactDOM.findDOMNode(this)) // eslint-disable-line
+            .select("g")
+            .select("path")
+            .style("fill", "none")
+            .style("stroke", axisColor);
     }
 
     render() {
+        // eslint-disable-line
         return <g />;
     }
 }
@@ -375,8 +322,6 @@ YAxis.defaultProps = {
     align: "left", // left or right of the chart
     min: 0, // range
     max: 1,
-    showGrid: false,
-    hideAxisLine: false,
     type: "linear", // linear, log, or power
     absolute: false, // Display scale always positive
     format: ".2s", // Format string for d3.format
@@ -419,44 +364,28 @@ YAxis.propTypes = {
     max: PropTypes.number.isRequired, // eslint-disable-line
 
     /**
-     * A d3 scale for the y-axis which you can use to transform your data in the y direction.
-     * If omitted, the scale will be automatically computed based on the max and min props.
-     */
-    yScale: PropTypes.func,
-
-    /**
      * Render all ticks on the axis as positive values.
      */
     absolute: PropTypes.bool, // eslint-disable-line
 
     /**
-     * Object specifying the CSS by which the axis can be styled. The object can contain:
-     * "label", "values", "axis" and "ticks". Each of these is an inline CSS style applied
-     * to the axis label, axis values, axis line and ticks respectively.
+     * Object specifying the available parameters by which the axis can be
+     * styled. The object can contain: "labels" and "axis". Each of these
+     * is an inline CSS style applied to the tick labels and axis lines
+     * respectively.
      *
-     * Note that these are passed into d3's styling, so are regular CSS property names
-     * and not React's camel case names (e.g. "stroke-dasharray" not strokeDasharray).
+     * In addition the axis label itself can be styled with: "labelColor",
+     * "labelFont", "labelWidth" and "labelSize".
      */
     style: PropTypes.shape({
-        label: PropTypes.object, // eslint-disable-line
+        labels: PropTypes.object, // eslint-disable-line
         axis: PropTypes.object, // eslint-disable-line
-        values: PropTypes.object, // esline-disable-line
-        ticks: PropTypes.object // esline-disable-line
+        labelColor: PropTypes.string,
+        labelFont: PropTypes.string,
+        labelWeight: PropTypes.string,
+        labelSize: PropTypes.string,
+        width: PropTypes.number
     }),
-
-    /**
-     * Render a horizontal grid by extending the axis ticks across the chart area. Note that this
-     * can only be applied to an inner axis (one next to a chart). If you have multiple axes then
-     * this can't be used on the outer axes. Also, if you have an axis on either side of the chart
-     * then you can use this, but the UX not be ideal.
-     */
-    showGrid: PropTypes.bool,
-
-    /**
-     * Render the axis line. This is a nice option of you are also using `showGrid` as you may not
-     * want both the vertical axis line and the extended ticks.
-     */
-    hideAxisLine: PropTypes.bool,
 
     /**
      * The transition time for moving from one scale to another
