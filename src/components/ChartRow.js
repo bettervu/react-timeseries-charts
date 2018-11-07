@@ -242,8 +242,6 @@ export default class ChartRow extends React.Component {
                     props = {
                         width: colWidth,
                         height: innerHeight,
-                        chartExtent: chartWidth,
-                        isInnerAxis: leftColumnIndex === 0,
                         align: "left",
                         scale: this.scaleMap[id].latestScale()
                     };
@@ -276,9 +274,6 @@ export default class ChartRow extends React.Component {
                     props = {
                         width: colWidth,
                         height: innerHeight,
-                        chartExtent: chartWidth,
-                        //showGrid: this.props.showGrid,
-                        isInnerAxis: rightColumnIndex === 0,
                         align: "right",
                         scale: this.scaleMap[id].latestScale()
                     };

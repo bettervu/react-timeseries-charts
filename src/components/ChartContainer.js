@@ -28,9 +28,8 @@ import Label from "./Label";
 
 const defaultTimeAxisStyle = {
     axis: {
-        fill: "none",
-        stroke: "#C0C0C0",
-        pointerEvents: "none"
+        axisColor: "#dbdbdb",
+        axisWidth: 1
     }
 };
 
@@ -410,6 +409,7 @@ export default class ChartContainer extends React.Component {
 
         return this.props.showGridPosition === "over" ? (
             <svg
+                id="myViewer"
                 width={svgWidth}
                 height={svgHeight}
                 style={svgStyle}
@@ -424,6 +424,7 @@ export default class ChartContainer extends React.Component {
             </svg>
         ) : (
             <svg
+                id="myViewer"
                 width={svgWidth}
                 height={svgHeight}
                 style={{ display: "block" }}
@@ -651,6 +652,6 @@ ChartContainer.defaultProps = {
     enableDragZoom: false,
     utc: false,
     showGrid: false,
-    showGridPosition: "over",
+    showGridPosition: "under",
     timeAxisStyle: defaultTimeAxisStyle
 };

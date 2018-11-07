@@ -22,8 +22,21 @@ import { Styler } from "../js/styler";
 const defaultStyle = {
     normal: { fill: "steelblue", opacity: 0.8 },
     highlighted: { fill: "steelblue", opacity: 1.0 },
-    selected: { fill: "steelblue", opacity: 1.0 },
+    selected: {
+        fill: "steelblue",
+        stroke: "#2CB1CF",
+        strokeWidth: 2,
+        strokeOpacity: 1,
+        fillOpacity: 0.7
+    },
     muted: { fill: "steelblue", opacity: 0.4 }
+};
+
+const iconStyle = {
+    normal: { fill: "none", opacity: 0.8 },
+    highlighted: { fill: "none", opacity: 1.0 },
+    selected: { fill: "none", stroke: "#0090DA", strokeWidth: 2, strokeOpacity: 1, fillOpacity: 1 },
+    muted: { fill: "none", opacity: 0.4 }
 };
 
 /**
@@ -191,6 +204,35 @@ export default class ScatterChart extends React.Component {
         return style;
     }
 
+    blandStyle(column, event) {
+        let style;
+
+        const isHighlighted =
+            this.props.highlight &&
+            column === this.props.highlight.column &&
+            Event.is(this.props.highlight.event, event);
+        const isSelected =
+            this.props.selected &&
+            column === this.props.selected.column &&
+            Event.is(this.props.selected.event, event);
+
+        if (this.props.selected) {
+            if (isSelected) {
+                style = iconStyle.selected;
+            } else if (isHighlighted) {
+                style = iconStyle.highlighted;
+            } else {
+                style = iconStyle.normal;
+            }
+        } else if (isHighlighted) {
+            style = iconStyle.highlighted;
+        } else {
+            style = iconStyle.normal;
+        }
+
+        return style;
+    }
+
     //
     // Render
     //
@@ -200,7 +242,7 @@ export default class ScatterChart extends React.Component {
         const points = [];
         let hoverOverlay;
 
-        // if selectionChange is enabled, pointerEvents should be enabled as well
+        // if selectionChange is enabled, pointerEvents should be enabled as welld
         const pointerEvents = this.props.onSelectionChange ? "auto" : "none";
 
         this.props.columns.forEach(column => {
@@ -243,11 +285,13 @@ export default class ScatterChart extends React.Component {
                         );
                     }
 
+                    //allow for custom icons to be used, but only when the value is -1
+
                     points.push(
                         <circle
                             key={`${column}-${key}`}
                             cx={x}
-                            cy={y}
+                            cy={y - this.props.scatterPointsOffsetY}
                             r={radius}
                             style={style}
                             pointerEvents={pointerEvents}
@@ -255,6 +299,64 @@ export default class ScatterChart extends React.Component {
                             onClick={e => this.handleClick(e, event, column)}
                         />
                     );
+
+                    key += 1;
+                }
+            }
+        });
+
+        this.props.columns.forEach(column => {
+            let key = 1;
+            for (const event of series.events()) {
+                const t = new Date(
+                    event.begin().getTime() + (event.end().getTime() - event.begin().getTime()) / 2
+                );
+                const value = event.get(column);
+                const badPoint = _.isNull(value) || _.isNaN(value);
+                const blandStyle = this.blandStyle(column, event);
+
+                if (!badPoint) {
+                    const x = timeScale(t);
+
+                    const isHighlighted =
+                        this.props.highlight &&
+                        Event.is(this.props.highlight.event, event) &&
+                        column === this.props.highlight.column;
+
+                    // Hover info. Note that we just pass all of our props down
+                    // into the EventMarker here, but the interesting ones are:
+                    // * the info values themselves
+                    // * the infoStyle
+                    // * infoWidth and infoHeight
+                    if (isHighlighted && this.props.info) {
+                        hoverOverlay = (
+                            <EventMarker
+                                {...this.props}
+                                event={event}
+                                column={column}
+                                marker="circle"
+                                markerRadius={0}
+                            />
+                        );
+                    }
+
+                    //allow for custom icons to be used, but only when the value is -1
+                    if (this.props.icon && value === -1) {
+                        const Icon = this.props.icon;
+                        const iconOffsetX = this.props.iconOffsetX;
+                        const iconOffsetY = this.props.iconOffsetY;
+
+                        points.push(
+                            <Icon
+                                pointerEvents={pointerEvents}
+                                onMouseMove={this.handleHover}
+                                onClick={e => this.handleClick(e, event, column)}
+                                style={blandStyle}
+                                key={`${column}-${key}`}
+                                transform={`translate(${x - iconOffsetX}, ${iconOffsetY})`}
+                            />
+                        );
+                    }
 
                     key += 1;
                 }
