@@ -400,11 +400,6 @@ ScatterChart.propTypes = {
     visible: PropTypes.bool,
 
     /**
-     * What [Pond TimeSeries](https://esnet-pondjs.appspot.com/#/timeseries) data to visualize
-     */
-    series: PropTypes.instanceOf(TimeSeries).isRequired,
-
-    /**
      * Which columns of the series to render
      */
     columns: PropTypes.arrayOf(PropTypes.string),
@@ -543,11 +538,6 @@ ScatterChart.propTypes = {
      * [Internal] The timeScale supplied by the surrounding ChartContainer
      */
     timeScale: PropTypes.func,
-
-    /**
-     * [Internal] The yScale supplied by the associated YAxis
-     */
-    yScale: PropTypes.func,
 
     /**
      * [Internal] The width supplied by the surrounding ChartContainer
